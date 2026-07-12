@@ -56,25 +56,25 @@ pipeline {
             }
         }
 
-        stage('Push to Docker Hub') 
-        {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'dockerhub-creds-new',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )
-        ]) {
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds-new',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
 
-            bat '''
-            echo Username: %DOCKER_USER%
-            powershell -Command "Write-Host 'Password length:' $env:DOCKER_PASS.Length"
-            '''
+                    bat '''
+                    echo Username: %DOCKER_USER%
+                    powershell -Command "Write-Host 'Password length:' $env:DOCKER_PASS.Length"
+                    '''
 
+                }
+            }
         }
     }
-}
 
     post {
         success {
@@ -89,5 +89,4 @@ pipeline {
             bat 'docker logout || exit 0'
         }
     }
-}
 }
