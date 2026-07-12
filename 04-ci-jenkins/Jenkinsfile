@@ -1,4 +1,3 @@
-
 pipeline {
     agent any
 
@@ -24,7 +23,7 @@ pipeline {
         stage('Build') {
             steps {
                 dir('01-source-code/demo') {
-                    sh './mvnw -B clean compile'
+                    bat 'mvnw.cmd -B clean compile'
                 }
             }
         }
@@ -32,7 +31,7 @@ pipeline {
         stage('Unit Test') {
             steps {
                 dir('01-source-code/demo') {
-                    sh './mvnw -B test'
+                    bat 'mvnw.cmd -B test'
                 }
             }
             post {
@@ -45,23 +44,23 @@ pipeline {
         stage('Package') {
             steps {
                 dir('01-source-code/demo') {
-                    sh './mvnw -B package -DskipTests'
+                    bat 'mvnw.cmd -B package -DskipTests'
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh "docker build -f 03-containerization/Dockerfile -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+                bat "docker build -f 03-containerization/Dockerfile -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
-                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "docker push ${IMAGE_NAME}:latest"
+                    bat "echo %DOCKER_PASS% | docker login -u %DOCKER_USER% --password-stdin"
+                    bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    bat "docker push ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -75,7 +74,7 @@ pipeline {
             echo "Pipeline failed. Check the logs above."
         }
         always {
-            sh 'docker logout || true'
+            bat 'docker logout || exit 0'
         }
     }
 }
