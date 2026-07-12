@@ -1,0 +1,81 @@
+
+pipeline {
+    agent any
+
+    environment {
+        DOCKERHUB_USER = 'nikhilkesarwani'
+        IMAGE_NAME      = "${DOCKERHUB_USER}/java-cicd-demo"
+        IMAGE_TAG       = "${env.BUILD_NUMBER}"
+    }
+
+    options {
+        timestamps()
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+    }
+
+    stages {
+
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Build') {
+            steps {
+                dir('01-source-code/demo') {
+                    sh './mvnw -B clean compile'
+                }
+            }
+        }
+
+        stage('Unit Test') {
+            steps {
+                dir('01-source-code/demo') {
+                    sh './mvnw -B test'
+                }
+            }
+            post {
+                always {
+                    junit '01-source-code/demo/target/surefire-reports/*.xml'
+                }
+            }
+        }
+
+        stage('Package') {
+            steps {
+                dir('01-source-code/demo') {
+                    sh './mvnw -B package -DskipTests'
+                }
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                sh "docker build -f 03-containerization/Dockerfile -t ${IMAGE_NAME}:${IMAGE_TAG} -t ${IMAGE_NAME}:latest ."
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                    sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker push ${IMAGE_NAME}:latest"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Pipeline succeeded: ${IMAGE_NAME}:${IMAGE_TAG} built and pushed."
+        }
+        failure {
+            echo "Pipeline failed. Check the logs above."
+        }
+        always {
+            sh 'docker logout || true'
+        }
+    }
+}
