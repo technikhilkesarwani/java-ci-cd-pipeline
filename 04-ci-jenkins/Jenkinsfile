@@ -5,6 +5,7 @@ pipeline {
         DOCKERHUB_USER = 'nikhilkesarwani'
         IMAGE_NAME = "${DOCKERHUB_USER}/java-cicd-demo"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
+        KUBECONFIG = "C:\\Users\\bmvni\\.kube\\config"
     }
 
     options {
@@ -57,23 +58,27 @@ pipeline {
         }
 
         stage('Push to Docker Hub') {
-    steps {
-        withCredentials([
-            usernamePassword(
-                credentialsId: 'dockerhub-creds-new',
-                usernameVariable: 'DOCKER_USER',
-                passwordVariable: 'DOCKER_PASS'
-            )
-        ]) {
-
-            bat "docker login -u %DOCKER_USER% -p %DOCKER_PASS%"
-
-            bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-
-            bat "docker push ${IMAGE_NAME}:latest"
+            steps {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'dockerhub-creds-new',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
+                    )
+                ]) {
+                    bat "docker login -u %DOCKER_USER% -p %DOCKER_PASS%"
+                    bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                    bat "docker push ${IMAGE_NAME}:latest"
+                }
+            }
         }
-    }
-}
+
+        stage('Deploy to Minikube') {
+            steps {
+                bat "kubectl set image deployment/java-cicd-demo java-cicd-demo=${IMAGE_NAME}:${IMAGE_TAG}"
+                bat "kubectl rollout status deployment/java-cicd-demo"
+            }
+        }
     }
 
     post {
