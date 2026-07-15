@@ -12,7 +12,8 @@ public class HelloController {
 public Map<String, String> home() {
     return Map.of(
             "message", "Hello from the CI/CD demo pipeline! v2 - auto-deploy test",
-            "status", "UP"
+            "status", "UP",
+            "description", "This is a application demonstrating CI/CD pipeline with Jenkins"
     );
 }
 
