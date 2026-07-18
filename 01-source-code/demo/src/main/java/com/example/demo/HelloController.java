@@ -18,7 +18,7 @@ public Map<String, String> home() {
 
     @GetMapping("/api/version")
     public Map<String, String> version() {
-        return Map.of("version", "1.0.0");
+        return Map.of("Version", "1.0.0");
     }
 
 }
