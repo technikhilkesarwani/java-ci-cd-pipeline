@@ -12,7 +12,7 @@ public class HelloController {
 public Map<String, String> home() {
     return Map.of(
             "message", "Hello from the CI/CD demo pipeline! v2 - auto-deploy test",
-            "status", "Uttar Pradesh is the largest state in India"
+            "status", "Uttar Pradesh is the largest state in India by Area"
     );
 }
 
